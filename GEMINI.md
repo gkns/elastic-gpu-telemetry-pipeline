@@ -5,3 +5,8 @@ Active Plan: [specs/001-custom-mq-system/plan.md](specs/001-custom-mq-system/pla
 <!-- SPECKIT END -->
 
 This repository contains an elastic, scalable telemetry pipeline for AI clusters.
+Components:
+- **Custom MQ**: Binary protocol over TCP.
+- **Streamer**: CSV metric ingestion.
+- **Collector**: Data processing and QuestDB persistence.
+- **API Gateway**: REST API for data access.
