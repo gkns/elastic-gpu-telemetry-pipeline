@@ -1,0 +1,12 @@
+version: '3'
+services:
+  questdb:
+    image: questdb/questdb:7.3.3
+    container_name: questdb
+    ports:
+      - "9000:9000"
+      - "8812:8812"
+      - "9009:9009"
+    environment:
+      - QDB_PG_USER=admin
+      - QDB_PG_PASSWORD=quest

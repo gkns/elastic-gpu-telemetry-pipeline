@@ -1,0 +1,11 @@
+.git/
+Dockerfile*
+.dockerignore
+.gitignore
+*.log*
+.env*
+coverage/
+vendor/
+bin/
+pkg/
+tests/

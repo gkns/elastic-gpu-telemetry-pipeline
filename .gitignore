@@ -1,0 +1,36 @@
+# Go
+*.exe
+*.test
+vendor/
+*.out
+bin/
+*.prof
+
+# Universal
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/
+
+# Environment
+.env*
+*.log*
+
+# Test Coverage
+coverage/
+
+# Kubernetes
+*.secret.yaml
+secrets/
+.kube/
+kubeconfig*
+*.key
+*.crt
+
+# Infrastructure
+.terraform/
+*.tfstate*
+*.tfvars
+.terraform.lock.hcl
