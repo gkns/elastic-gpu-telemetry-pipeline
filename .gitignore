@@ -7,7 +7,7 @@ bin/
 *.prof
 
 # Universal
-.DS_Store
+*.DS_Store
 Thumbs.db
 *.tmp
 *.swp
@@ -34,3 +34,6 @@ kubeconfig*
 *.tfstate*
 *.tfvars
 .terraform.lock.hcl
+
+# MQ persistence file
+*.bin
