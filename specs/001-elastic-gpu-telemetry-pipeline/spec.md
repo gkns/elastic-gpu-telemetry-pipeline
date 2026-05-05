@@ -1,4 +1,4 @@
-# Feature Specification: Custom Messaging Queue System
+# Feature Specification: Elastic GPU Telemetry Pipeline
 
 **Feature Branch**: `001-custom-mq-system`  
 **Created**: 2026-04-30  
@@ -30,9 +30,29 @@ As a system operator, I want the custom messaging queue to be independently depl
 
 ---
 
-### User Story 2 - Basic Telemetry Streaming (Priority: P1)
+### User Story 2 - Single node QuestDB for persistence (Priority: P0)
+
+For the collector to persist the telemetry and the API gateway to query, we need a time-series persistence layer.
+
+**Why this priority**: This is essential for the collector to persist the telemetry and the API-Gateway to query and render the data.
+
+**Independent Test**: This shall be unit-testable by inserting mock data into itself and running a few time-range queries.
+
+**Acceptance Scenarios**:
+
+1. **Given** the QuestDB is running, the collector should be able to persist the processed telemetry to the QuestDB through standard Go postgres drivers.
+
+---
+
+### User Story 3 - Basic Telemetry Streaming (Priority: P1)
 
 As a Telemetry Streamer, I want to connect to the custom messaging queue and send telemetry data so that it can be processed by collectors.
+
+A sample line with title and data from the telemetry data CSV is given below:
+
+```timestamp,metric_name,gpu_id,device,uuid,modelName,Hostname,container,pod,namespace,value,labels_raw
+"2025-07-18T20:42:34Z","DCGM_FI_DEV_GPU_UTIL","0","nvidia0","GPU-5fd4f087-86f3-7a43-b711-4771313afc50","NVIDIA H100 80GB HBM3","mtv5-dgx1-hgpu-031","","","","0","DCGM_FI_DRIVER_VERSION=""535.129.03"",Hostname=""mtv5-dgx1-hgpu-031"",UUID=""GPU-5fd4f087-86f3-7a43-b711-4771313afc50"",__name__=""DCGM_FI_DEV_GPU_UTIL"",device=""nvidia0"",gpu=""0"",instance=""mtv5-dgx1-hgpu-031:9400"",job=""dgx_dcgm_exporter"",modelName=""NVIDIA H100 80GB HBM3"""
+```
 
 **Why this priority**: Core functionality of the pipeline; without message transmission, no telemetry can be processed.
 
@@ -42,14 +62,15 @@ As a Telemetry Streamer, I want to connect to the custom messaging queue and sen
 
 1. **Given** the MQ is running, **When** a Streamer attempts to connect, **Then** the connection is established successfully.
 2. **Given** a connected Streamer, **When** it sends a telemetry message, **Then** the MQ acknowledges receipt.
+3. When the Streamer reads a row from the CSV, it MUST inject the current system processing time as the timestamp for that telemetry payload.
 
 ---
 
-### User Story 2 - Basic Telemetry Collection (Priority: P1)
+### User Story 4 - Basic Telemetry Collection (Priority: P1)
 
-As a Telemetry Collector, I want to connect to the custom messaging queue and receive telemetry data so that I can parse and persist it.
+As a Telemetry Collector, I want to connect to the custom messaging queue and receive telemetry data so that I can parse and persist it. The collector shall persist the data to a single-node **QuestDB**.
 
-**Why this priority**: Essential for data processing; collectors are needed to make the data useful.
+**Why this priority**: Essential for data processing; collectors are needed to make the data useful and highly desireable for this to be in time-series DB for efficient querying.
 
 **Independent Test**: Can be tested by running one MQ instance with pre-loaded or currently arriving messages and verifying the Collector receives them in the correct order.
 
@@ -60,7 +81,28 @@ As a Telemetry Collector, I want to connect to the custom messaging queue and re
 
 ---
 
-### User Story 3 - Horizontal Scaling & Load Balancing (Priority: P2)
+### User Story 5 - API Gateway (Priority: P1)
+
+As an API gateway, I want to be able to serve the telemetry data to the user / other tools so that users can get the data or other tools can render the data. The API gateway queries the data in the QuestDB and renders the data.
+
+**Why this priority**: Users should be able to make use of the data.
+
+**Independent Test**: Can be tested by running one API gateway instance and some mocked data inserted into the QuestDB.
+
+**Acceptance Scenarios**:
+
+1. **Given** Given the collector persisted the data, the API gateway should be able to successfully query the database and return the results.
+2. The OpenAPI (Swagger) specification for these endpoints MUST be auto-generated, triggered via a specific Makefile command.
+2. **Given** mocked data in unit tests, the gateway should should be able to serve the following APIs at the minimum:
+
+- [ ] `GET /api/v1/gpus` which returns a list of all GPUs for which telemetry data is available.
+- [ ] `GET / api/v1/gpus/{id}/telemetry` which return a paginated telemetry entries for a specific GPU, ordered by time
+- [ ] `GET / api/v1/gpus/{id}/telemetry?start_time=...&end_time=...` which returns a paginated telemetry entries for a specific GPU, within the specific time range and ordered by time.
+
+---
+
+
+### User Story 6 - Horizontal Scaling & Load Balancing (Priority: P2)
 
 As a system operator, I want the custom messaging queue to distribute messages among multiple collectors so that the system can handle high telemetry volumes.
 
@@ -75,7 +117,7 @@ As a system operator, I want the custom messaging queue to distribute messages a
 
 ---
 
-### User Story 4 - High Availability & Resilience (Priority: P3)
+### User Story 7 - High Availability & Resilience (Priority: P3)
 
 As a system operator, I want the MQ to handle up to 10 instances of streamers and collectors without crashing or losing data.
 
@@ -123,7 +165,7 @@ As a system operator, I want the MQ to handle up to 10 instances of streamers an
 - **SC-002**: System successfully handles 10 concurrent streamers and 10 concurrent collectors without performance degradation.
 - **SC-003**: Zero message loss confirmed during graceful scaling (adding/removing collectors).
 - **SC-004**: System recovers and re-distributes messages within 5 seconds of a collector failure.
-- **SC-004**: All components are independently deployable and scalable.
+- **SC-004**: All components are independently deployable and scalable (Except QuestDB which remains single-node for the initial version).
 - **SC-006**: All components have unit tests with measurable code coverage.
 - **SC-007**: All components have corresponding dockerfiles.
 

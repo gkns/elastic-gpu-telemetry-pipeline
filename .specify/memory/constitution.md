@@ -16,24 +16,28 @@ The system will process GPU telemetry data from CSV files and expose it via a RE
    - Connects streamers and collectors.
    - Designed for scale, performance, and availability (up to 10 instances for streamer/collector).
 
-2. **Telemetry Streamer**
+2. **QuestDB** for collector persistence and the queries by the API Gateway.
+   - Enables the collecor to persist the processed telemetry for later querying.
+   - Enables the API-Gateway to query the persisted data.
+
+3. **Telemetry Streamer**
    - Reads telemetry from CSV and streams it periodically over the custom message queue.
    - Process time = telemetry timestamp.
    - Dynamically scalable up/down.
 
-3. **Telemetry Collector**
+4. **Telemetry Collector**
    - Consumes telemetry from the custom MQ, parses, and persists it.
    - Dynamically scalable up/down.
 
-4. **API Gateway**
+5. **API Gateway**
    - REST API exposing telemetry.
    - Auto-generated OpenAPI spec.
    - This API layer will be a separate module and independently deployable and scalable.
 
 ## 🏗️ Constraints for components / Modules
-- Each of the components should be independently deployable and scalable.
-- Each module should talk to other modules only through the custom MQ.
-- Each of the components should have its corresponding dockerfile.
+- Each of the components should be independently deployable and scalable (Except QuestDB, which remains a single node instance).
+- Each module should talk to other modules only through the custom MQ (Except collector which talks to QuestDB as well. Also, the API-Gateway only talks to the QuestDB.)
+- Each of the components should have its corresponding dockerfile. And should be integrated into the overall Helm chart for deployment.
 
 ## 🛠️ Technology Stack
 - **Programming Language**: Golang (clean, idiomatic)
