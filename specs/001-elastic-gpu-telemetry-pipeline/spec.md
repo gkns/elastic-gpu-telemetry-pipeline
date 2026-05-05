@@ -1,6 +1,6 @@
 # Feature Specification: Elastic GPU Telemetry Pipeline
 
-**Feature Branch**: `001-custom-mq-system`  
+**Feature Branch**: `001-gpu-telemetry-pipeline`  
 **Created**: 2026-04-30  
 **Status**: Draft  
 **Input**: User description: "Design and implement an elastic, scalable, and stable telemetry pipeline for an AI Cluster with a custom messaging queue. The system will process GPU telemetry data from CSV files and expose it via a REST API. The core modules which are independently deployable are : - Custom Messaging Queue, which does not use any existing open-source message queues. This MQ connects the streamers and collectors. Scalable upto 10 instances for streamer/collector. ..."
@@ -91,7 +91,7 @@ As an API gateway, I want to be able to serve the telemetry data to the user / o
 
 **Acceptance Scenarios**:
 
-1. **Given** Given the collector persisted the data, the API gateway should be able to successfully query the database and return the results.
+1. **Given** the collector persisted the data, the API gateway should be able to successfully query the database and return the results.
 2. The OpenAPI (Swagger) specification for these endpoints MUST be auto-generated, triggered via a specific Makefile command.
 2. **Given** mocked data in unit tests, the gateway should should be able to serve the following APIs at the minimum:
 
@@ -102,7 +102,7 @@ As an API gateway, I want to be able to serve the telemetry data to the user / o
 ---
 
 
-### User Story 6 - Horizontal Scaling & Load Balancing (Priority: P2)
+### User Story 6 - Horizontal Scaling & Load Balancing (Priority: P2)x	
 
 As a system operator, I want the custom messaging queue to distribute messages among multiple collectors so that the system can handle high telemetry volumes.
 
@@ -165,7 +165,7 @@ As a system operator, I want the MQ to handle up to 10 instances of streamers an
 - **SC-002**: System successfully handles 10 concurrent streamers and 10 concurrent collectors without performance degradation.
 - **SC-003**: Zero message loss confirmed during graceful scaling (adding/removing collectors).
 - **SC-004**: System recovers and re-distributes messages within 5 seconds of a collector failure.
-- **SC-004**: All components are independently deployable and scalable (Except QuestDB which remains single-node for the initial version).
+- **SC-005**: All components are independently deployable and scalable (Except QuestDB which remains single-node for the initial version).
 - **SC-006**: All components have unit tests with measurable code coverage.
 - **SC-007**: All components have corresponding dockerfiles.
 
