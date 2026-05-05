@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/gkns/elastic-gpu-telemetry-pipeline/streamer/pkg/client"

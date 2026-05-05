@@ -3,7 +3,6 @@ package reader
 import (
 	"encoding/csv"
 	"fmt"
-	"io"
 	"os"
 )
 
