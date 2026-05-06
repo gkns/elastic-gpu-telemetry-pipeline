@@ -296,6 +296,9 @@ Runs the full pipeline (QuestDB + MQ + Streamer + Collector + API Gateway) with 
 # Build images
 make docker-build
 
+# Build and push to a registry (optional — for remote deployments)
+make docker-push REGISTRY=myorg TAG=v1.0.0
+
 # Start everything
 docker compose -f deploy/compose/docker-compose.yml up
 
@@ -321,18 +324,50 @@ Services are available at:
 
 ### Build and push images
 
-The chart references images by the names in `values.yaml`. For a local KIND cluster, build and load images directly:
+The chart references images by the names in `values.yaml`.
+
+**Local KIND cluster** — build and load images directly into the cluster:
 
 ```bash
 make docker-build
 
-kind load docker-image elastic-gpu-telemetry/mq:latest        --name gpu-telemetry
-kind load docker-image elastic-gpu-telemetry/streamer:latest   --name gpu-telemetry
-kind load docker-image elastic-gpu-telemetry/collector:latest  --name gpu-telemetry
+kind load docker-image elastic-gpu-telemetry/mq:latest         --name gpu-telemetry
+kind load docker-image elastic-gpu-telemetry/streamer:latest    --name gpu-telemetry
+kind load docker-image elastic-gpu-telemetry/collector:latest   --name gpu-telemetry
 kind load docker-image elastic-gpu-telemetry/api-gateway:latest --name gpu-telemetry
 ```
 
-For a remote registry, tag and push, then set `imagePullPolicy: Always` and configure `imagePullSecrets`.
+**Remote registry** — build, tag, and push in one step, then point the chart at the registry:
+
+```bash
+# Docker Hub
+make docker-push REGISTRY=myorg TAG=v1.0.0
+
+# GitHub Container Registry
+make docker-push REGISTRY=ghcr.io/myorg TAG=v1.0.0
+
+# AWS ECR
+make docker-push REGISTRY=123456789.dkr.ecr.us-east-1.amazonaws.com/gpu-telemetry TAG=v1.0.0
+```
+
+Then install the chart referencing the pushed images:
+
+```bash
+helm install gpu-pipeline deploy/helm/elastic-gpu-telemetry/ \
+  --set imagePullPolicy=Always \
+  --set mq.image=myorg/mq:v1.0.0 \
+  --set streamer.image=myorg/streamer:v1.0.0 \
+  --set collector.image=myorg/collector:v1.0.0 \
+  --set apiGateway.image=myorg/api-gateway:v1.0.0
+```
+
+Or set a private registry pull secret:
+
+```bash
+helm install gpu-pipeline deploy/helm/elastic-gpu-telemetry/ \
+  --set imagePullSecrets[0].name=regcred \
+  --set imagePullPolicy=Always
+```
 
 ### Create a KIND cluster
 
