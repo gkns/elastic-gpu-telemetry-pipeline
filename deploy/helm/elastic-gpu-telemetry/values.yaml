@@ -65,15 +65,6 @@ streamer:
     # -- Rate-limit between publishes. "0" means as fast as possible.
     sendRate: "0"
   # -- CSV data source. Exactly one of `pvc` or `existingClaim` must be set.
-  csv:
-    # -- Name of an existing PVC that already contains the CSV file.
-    # Leave empty to create a new PVC (you must populate it manually or via a Job).
-    existingClaim: ""
-    # -- Settings used when existingClaim is empty and a new PVC is created.
-    storageSize: 2Gi
-    storageClassName: ""
-    # -- Mount path inside the streamer container.
-    mountPath: "/data"
   resources:
     requests:
       cpu: "50m"

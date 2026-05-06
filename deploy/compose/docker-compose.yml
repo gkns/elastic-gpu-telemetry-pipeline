@@ -46,8 +46,6 @@ services:
       STREAMER_MQ_ADDR: "mq:7000"
       STREAMER_CSV_PATH: "/data/input_dcgm_metrics_20250718_134233.csv"
       STREAMER_SEND_RATE: "0"
-    volumes:
-      - ../../data:/data:ro
     depends_on:
       mq:
         condition: service_healthy

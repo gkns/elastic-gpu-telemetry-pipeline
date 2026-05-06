@@ -348,28 +348,7 @@ helm install gpu-pipeline deploy/helm/elastic-gpu-telemetry/ \
   --set apiGateway.service.type=NodePort
 ```
 
-Follow the NOTES printed after install for the next steps.
-
-### Load the CSV into the Streamer PVC
-
-The Streamer PVC is provisioned but empty. Copy the CSV before the Streamer pod restarts:
-
-```bash
-STREAMER_POD=$(kubectl get pod \
-  -l app.kubernetes.io/component=streamer \
-  -l app.kubernetes.io/instance=gpu-pipeline \
-  -o jsonpath='{.items[0].metadata.name}')
-
-kubectl cp data/input_dcgm_metrics_20250718_134233.csv \
-  ${STREAMER_POD}:/data/input_dcgm_metrics_20250718_134233.csv
-```
-
-Alternatively, supply your own pre-populated PVC:
-
-```bash
-helm install gpu-pipeline deploy/helm/elastic-gpu-telemetry/ \
-  --set streamer.csv.existingClaim=my-csv-pvc
-```
+The CSV data is bundled inside the Streamer image — the Streamer pod starts reading automatically once MQ is healthy, no manual data loading required.
 
 ### Access the API Gateway
 
@@ -420,9 +399,8 @@ kubectl delete pvc -l app.kubernetes.io/instance=gpu-pipeline
 | `collector.replicas` | `2` | Number of Collector pods |
 | `collector.config.workers` | `4` | ILP writer goroutines per Collector |
 | `streamer.replicas` | `1` | Number of Streamer pods |
-| `streamer.csv.existingClaim` | `""` | Provide a pre-populated CSV PVC |
 | `apiGateway.service.type` | `ClusterIP` | `ClusterIP`, `NodePort`, or `LoadBalancer` |
-| `apiGateway.service.nodePort` | `30080` | NodePort value (when type=NodePort) |
+| `apiGateway.service.nodePort` | `30081` | NodePort value (when type=NodePort) |
 | `ingress.enabled` | `false` | Enable Ingress for the API Gateway |
 
 ---

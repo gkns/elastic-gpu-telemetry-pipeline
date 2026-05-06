@@ -1,32 +1,25 @@
 Elastic GPU Telemetry Pipeline — {{ .Chart.Version }} — installed as {{ .Release.Name }}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  STEP 1: Load your CSV data into the Streamer PVC
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Wait for the Streamer pod to be scheduled, then copy your CSV:
-
-  STREAMER_POD=$(kubectl get pod -l app.kubernetes.io/component=streamer \
-    -l app.kubernetes.io/instance={{ .Release.Name }} \
-    -o jsonpath='{.items[0].metadata.name}')
-
-  kubectl cp data/input_dcgm_metrics_20250718_134233.csv \
-    ${STREAMER_POD}:/data/input_dcgm_metrics_20250718_134233.csv
+The CSV data is bundled inside the Streamer image — no manual copy needed.
+The Streamer will start reading automatically once MQ is healthy.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  STEP 2: Access the API Gateway
+  Access the API Gateway
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 {{- if eq .Values.apiGateway.service.type "NodePort" }}
   export NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
   curl http://${NODE_IP}:{{ .Values.apiGateway.service.nodePort }}/api/v1/gpus
+  open http://${NODE_IP}:{{ .Values.apiGateway.service.nodePort }}/swagger/index.html
 {{- else if eq .Values.apiGateway.service.type "LoadBalancer" }}
   export LB_IP=$(kubectl get svc {{ include "elastic-gpu-telemetry.fullname" . }}-api-gateway \
     -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
   curl http://${LB_IP}:{{ .Values.apiGateway.service.port }}/api/v1/gpus
+  open http://${LB_IP}:{{ .Values.apiGateway.service.port }}/swagger/index.html
 {{- else }}
-  kubectl port-forward svc/{{ include "elastic-gpu-telemetry.fullname" . }}-api-gateway 8080:{{ .Values.apiGateway.service.port }}
-  curl http://localhost:8080/api/v1/gpus
+  kubectl port-forward svc/{{ include "elastic-gpu-telemetry.fullname" . }}-api-gateway {{ .Values.apiGateway.service.port }}:{{ .Values.apiGateway.service.port }}
+  curl http://localhost:{{ .Values.apiGateway.service.port }}/api/v1/gpus
+  open http://localhost:{{ .Values.apiGateway.service.port }}/swagger/index.html
 {{- end }}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
