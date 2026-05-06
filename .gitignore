@@ -25,8 +25,9 @@ coverage.*
 # WAL / Snapshot data
 wal/
 
-# Swag generated output (local)
-docs/
+# Swag generated output (local top-level only)
+/docs/
+!cmd/api-gateway/docs/
 
 # Kubernetes
 *.secret.yaml
