@@ -1,49 +1,32 @@
-.PHONY: all build test clean docker-build deploy kind-setup swagger
+BINDIR := bin
+CMDS    := mq streamer collector api-gateway
 
-GO_BIN ?= /usr/local/go/bin/go
-MODULES = mq streamer collector api-gateway
-
-all: build test swagger
+.PHONY: build test test-load swagger docker-build lint clean
 
 build:
-	@for dir in $(MODULES); do \
-		echo "Building $$dir..."; \
-		cd $$dir && $(GO_BIN) build ./... && cd ..; \
+	@mkdir -p $(BINDIR)
+	@for cmd in $(CMDS); do \
+		echo "Building $$cmd..."; \
+		go build -o $(BINDIR)/$$cmd ./cmd/$$cmd; \
 	done
 
 test:
-	@for dir in $(MODULES); do \
-		echo "Testing $$dir..."; \
-		cd $$dir && $(GO_BIN) test -v ./... && cd ..; \
-	done
+	go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out
 
-clean:
-	@for dir in $(MODULES); do \
-		echo "Cleaning $$dir..."; \
-		cd $$dir && $(GO_BIN) clean && cd ..; \
-	done
+test-load:
+	go test -tags loadtest -timeout 120s -run TestLoad ./internal/mq/
 
 swagger:
-	@echo "Generating Swagger docs..."
-	@cd api-gateway && $(GO_BIN) run github.com/swaggo/swag/cmd/swag init -g cmd/main.go
+	$(shell go env GOPATH)/bin/swag init -g cmd/api-gateway/main.go -o specs/001-elastic-gpu-telemetry-pipeline/contracts/
 
 docker-build:
-	@for dir in $(MODULES); do \
-		echo "Building Docker image for $$dir..."; \
-		docker build -t telemetry-$$dir:latest ./$$dir; \
-	done
+	docker build -f deploy/docker/mq.Dockerfile -t elastic-gpu-telemetry/mq:latest .
+	docker build -f deploy/docker/streamer.Dockerfile -t elastic-gpu-telemetry/streamer:latest .
+	docker build -f deploy/docker/collector.Dockerfile -t elastic-gpu-telemetry/collector:latest .
+	docker build -f deploy/docker/api-gateway.Dockerfile -t elastic-gpu-telemetry/api-gateway:latest .
 
-kind-setup:
-	@echo "Setting up KIND cluster..."
-	kind create cluster --name telemetry-pipeline
-	kubectl cluster-info --context kind-telemetry-pipeline
+lint:
+	golangci-lint run ./...
 
-deploy:
-	@echo "Deploying to KIND..."
-	helm install telemetry-pipeline ./deploy/helm
-
-coverage:
-	@for dir in $(MODULES); do \
-		echo "Generating coverage for $$dir..."; \
-		cd $$dir && $(GO_BIN) test -coverprofile=coverage.out ./... && cd ..; \
-	done
+clean:
+	rm -rf $(BINDIR) coverage.out coverage.html

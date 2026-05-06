@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "elastic-gpu-telemetry.fullname" . }}-mq-wal
+  labels:
+    {{- include "elastic-gpu-telemetry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mq
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.mq.walStorageSize }}
+  {{- with .Values.mq.walStorageClassName }}
+  storageClassName: {{ . }}
+  {{- end }}

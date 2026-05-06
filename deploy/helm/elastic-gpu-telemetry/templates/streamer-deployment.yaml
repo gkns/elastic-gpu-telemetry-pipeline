@@ -1,0 +1,43 @@
+{{- $csvClaim := .Values.streamer.csv.existingClaim | default (printf "%s-streamer-csv" (include "elastic-gpu-telemetry.fullname" .)) }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "elastic-gpu-telemetry.fullname" . }}-streamer
+  labels:
+    {{- include "elastic-gpu-telemetry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: streamer
+spec:
+  replicas: {{ .Values.streamer.replicas }}
+  selector:
+    matchLabels:
+      {{- include "elastic-gpu-telemetry.selectorLabels" (dict "component" "streamer" "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "elastic-gpu-telemetry.selectorLabels" (dict "component" "streamer" "context" .) | nindent 8 }}
+    spec:
+      {{- include "elastic-gpu-telemetry.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: streamer
+          image: {{ .Values.streamer.image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          env:
+            - name: STREAMER_MQ_ADDR
+              value: {{ printf "%s-mq:7000" (include "elastic-gpu-telemetry.fullname" .) | quote }}
+            - name: STREAMER_CSV_PATH
+              value: {{ .Values.streamer.config.csvPath | quote }}
+            - name: STREAMER_SEND_RATE
+              value: {{ .Values.streamer.config.sendRate | quote }}
+            - name: STREAMER_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: csv-data
+              mountPath: {{ .Values.streamer.csv.mountPath }}
+          resources:
+            {{- toYaml .Values.streamer.resources | nindent 12 }}
+      volumes:
+        - name: csv-data
+          persistentVolumeClaim:
+            claimName: {{ $csvClaim }}

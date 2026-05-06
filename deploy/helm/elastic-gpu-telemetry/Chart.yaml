@@ -1,0 +1,17 @@
+apiVersion: v2
+name: elastic-gpu-telemetry
+description: >
+  End-to-end GPU telemetry pipeline — custom TCP message queue, multi-replica
+  collectors, QuestDB time-series storage, and a REST API Gateway.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - gpu
+  - telemetry
+  - dcgm
+  - questdb
+  - timeseries
+maintainers:
+  - name: Gopikrishnan NS
+    email: nksgopikrishnan@gmail.com

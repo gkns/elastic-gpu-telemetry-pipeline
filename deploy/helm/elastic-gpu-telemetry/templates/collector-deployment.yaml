@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "elastic-gpu-telemetry.fullname" . }}-collector
+  labels:
+    {{- include "elastic-gpu-telemetry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: collector
+spec:
+  replicas: {{ .Values.collector.replicas }}
+  selector:
+    matchLabels:
+      {{- include "elastic-gpu-telemetry.selectorLabels" (dict "component" "collector" "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "elastic-gpu-telemetry.selectorLabels" (dict "component" "collector" "context" .) | nindent 8 }}
+    spec:
+      {{- include "elastic-gpu-telemetry.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: collector
+          image: {{ .Values.collector.image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          env:
+            - name: COLLECTOR_MQ_ADDR
+              value: {{ printf "%s-mq:7000" (include "elastic-gpu-telemetry.fullname" .) | quote }}
+            - name: COLLECTOR_QUESTDB_ILP_ADDR
+              value: {{ printf "%s-questdb:9009" (include "elastic-gpu-telemetry.fullname" .) | quote }}
+            - name: COLLECTOR_QUESTDB_PG_ADDR
+              value: {{ printf "%s-questdb:8812" (include "elastic-gpu-telemetry.fullname" .) | quote }}
+            - name: COLLECTOR_WORKERS
+              value: {{ .Values.collector.config.workers | quote }}
+            - name: COLLECTOR_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          resources:
+            {{- toYaml .Values.collector.resources | nindent 12 }}

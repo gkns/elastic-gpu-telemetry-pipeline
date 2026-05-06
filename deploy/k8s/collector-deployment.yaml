@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collector
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: collector
+  template:
+    metadata:
+      labels:
+        app: collector
+    spec:
+      containers:
+        - name: collector
+          image: elastic-gpu-telemetry/collector:latest
+          imagePullPolicy: Never
+          env:
+            - name: COLLECTOR_MQ_ADDR
+              value: "mq:7000"
+            - name: COLLECTOR_QUESTDB_ILP_ADDR
+              value: "questdb:9009"
+            - name: COLLECTOR_QUESTDB_PG_ADDR
+              value: "questdb:8812"

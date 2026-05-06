@@ -1,58 +1,50 @@
-<!-- SPECKIT START -->
-# Elastic GPU Telemetry Pipeline with Message Queue - Constitution
+# [PROJECT_NAME] Constitution
+<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
 
+## Core Principles
 
-## 🎯 Project Goal
-Design and implement an elastic, scalable, and stable telemetry pipeline for an AI Cluster with a custom messaging queue.
-The system will process GPU telemetry data from CSV files and expose it via a REST API. A sample line with title and data from the telemetry data CSV is given below:
+### [PRINCIPLE_1_NAME]
+<!-- Example: I. Library-First -->
+[PRINCIPLE_1_DESCRIPTION]
+<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
 
-```timestamp,metric_name,gpu_id,device,uuid,modelName,Hostname,container,pod,namespace,value,labels_raw
-"2025-07-18T20:42:34Z","DCGM_FI_DEV_GPU_UTIL","0","nvidia0","GPU-5fd4f087-86f3-7a43-b711-4771313afc50","NVIDIA H100 80GB HBM3","mtv5-dgx1-hgpu-031","","","","0","DCGM_FI_DRIVER_VERSION=""535.129.03"",Hostname=""mtv5-dgx1-hgpu-031"",UUID=""GPU-5fd4f087-86f3-7a43-b711-4771313afc50"",__name__=""DCGM_FI_DEV_GPU_UTIL"",device=""nvidia0"",gpu=""0"",instance=""mtv5-dgx1-hgpu-031:9400"",job=""dgx_dcgm_exporter"",modelName=""NVIDIA H100 80GB HBM3"""
-```
+### [PRINCIPLE_2_NAME]
+<!-- Example: II. CLI Interface -->
+[PRINCIPLE_2_DESCRIPTION]
+<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
 
-## 🏗️ Core Components / Modules
-1. **Custom Messaging Queue**
-   - Custom implementation (do NOT use ZeroMQ, RabbitMQ, Kafka, etc.).
-   - Connects streamers and collectors.
-   - Designed for scale, performance, and availability (up to 10 instances for streamer/collector).
+### [PRINCIPLE_3_NAME]
+<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
+[PRINCIPLE_3_DESCRIPTION]
+<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
 
-2. **QuestDB** for collector persistence and the queries by the API Gateway.
-   - Enables the collecor to persist the processed telemetry for later querying.
-   - Enables the API-Gateway to query the persisted data.
+### [PRINCIPLE_4_NAME]
+<!-- Example: IV. Integration Testing -->
+[PRINCIPLE_4_DESCRIPTION]
+<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
 
-3. **Telemetry Streamer**
-   - Reads telemetry from CSV and streams it periodically over the custom message queue.
-   - Process time = telemetry timestamp.
-   - Dynamically scalable up/down.
+### [PRINCIPLE_5_NAME]
+<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
+[PRINCIPLE_5_DESCRIPTION]
+<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
 
-4. **Telemetry Collector**
-   - Consumes telemetry from the custom MQ, parses, and persists it.
-   - Dynamically scalable up/down.
+## [SECTION_2_NAME]
+<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
 
-5. **API Gateway**
-   - REST API exposing telemetry.
-   - Auto-generated OpenAPI spec.
-   - This API layer will be a separate module and independently deployable and scalable.
+[SECTION_2_CONTENT]
+<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
 
-## 🏗️ Constraints for components / Modules
-- Each of the components should be independently deployable and scalable (Except QuestDB, which remains a single node instance).
-- Each module should talk to other modules only through the custom MQ (Except collector which talks to QuestDB as well. Also, the API-Gateway only talks to the QuestDB.)
-- Each of the components should have its corresponding dockerfile. And should be integrated into the overall Helm chart for deployment.
+## [SECTION_3_NAME]
+<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
 
-## 🛠️ Technology Stack
-- **Programming Language**: Golang (clean, idiomatic)
-- **Deployment**: Docker + Kubernetes
-- **Deployment Tooling**: Helm
-- **API Documentation**: OpenAPI (Swagger)
-- **Build tooling**: `Makefile` for builds, code coverage, and OpenAPI spec generation
+[SECTION_3_CONTENT]
+<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
 
-## Non-Functional Requirements
-- **Code Quality**: Clean, maintainable systems-level code. Handle error paths and memory management gracefully. Also, log the errors clearly
-- **Testing**: Mandatory unit tests with measurable code coverage via `Makefile`. (System tests are bonus).
-- **Packaging & Deployment**: Dockerfiles for all applications (ustom Messaging Queue, ), and Helm charts for individual modules and an Umbrella chart for the entire stack on Kubernetes. For local testing a KIND K8s cluster will be used. Make sure it is deployable on KIND.
+## Governance
+<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-## General Constraints
-- Whenever a change is requested in a module, the change should be implemented in that module only.
+[GOVERNANCE_RULES]
+<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
 
-
-<!-- SPECKIT END -->
+**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
+<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->

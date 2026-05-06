@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "elastic-gpu-telemetry.fullname" . }}-questdb
+  labels:
+    {{- include "elastic-gpu-telemetry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: questdb
+spec:
+  selector:
+    {{- include "elastic-gpu-telemetry.selectorLabels" (dict "component" "questdb" "context" .) | nindent 4 }}
+  ports:
+    - name: pg
+      port: 8812
+      targetPort: pg
+    - name: ilp
+      port: 9009
+      targetPort: ilp
+    - name: http
+      port: 9000
+      targetPort: http

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "elastic-gpu-telemetry.fullname" . }}-mq
+  labels:
+    {{- include "elastic-gpu-telemetry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mq
+  annotations:
+    # Streamers and Collectors resolve "mq" via this ClusterIP Service.
+    # The MQ binary must not be load-balanced across multiple pods because
+    # its WAL and in-flight state are local; use replicas: 1.
+spec:
+  selector:
+    {{- include "elastic-gpu-telemetry.selectorLabels" (dict "component" "mq" "context" .) | nindent 4 }}
+  ports:
+    - name: tcp
+      port: 7000
+      targetPort: tcp

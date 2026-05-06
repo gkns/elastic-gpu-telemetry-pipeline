@@ -1,0 +1,199 @@
+openapi: "3.0.3"
+info:
+  title: GPU Telemetry API
+  description: REST API for querying GPU telemetry data from the Elastic GPU Telemetry Pipeline.
+  version: "v1"
+  contact:
+    name: Elastic GPU Telemetry Pipeline
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+paths:
+  /api/v1/gpus:
+    get:
+      summary: List all GPUs with available telemetry data
+      operationId: listGPUs
+      tags: [telemetry]
+      responses:
+        "200":
+          description: List of GPU IDs for which telemetry data is available
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GPU"
+              example:
+                - id: "GPU-5fd4f087-86f3-7a43-b711-4771313afc50"
+                - id: "GPU-abc12345-0000-0000-0000-000000000001"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/gpus/{id}/telemetry:
+    get:
+      summary: Get paginated telemetry entries for a specific GPU
+      operationId: getGPUTelemetry
+      tags: [telemetry]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: GPU UUID (as returned by /api/v1/gpus)
+          schema:
+            type: string
+          example: "GPU-5fd4f087-86f3-7a43-b711-4771313afc50"
+        - name: start_time
+          in: query
+          required: false
+          description: "ISO 8601 timestamp — filter entries >= start_time"
+          schema:
+            type: string
+            format: date-time
+          example: "2025-07-18T20:00:00Z"
+        - name: end_time
+          in: query
+          required: false
+          description: "ISO 8601 timestamp — filter entries <= end_time"
+          schema:
+            type: string
+            format: date-time
+          example: "2025-07-18T21:00:00Z"
+        - name: page
+          in: query
+          required: false
+          description: Page number (1-indexed)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          required: false
+          description: Number of entries per page (max 1000)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+      responses:
+        "200":
+          description: Paginated telemetry entries for the requested GPU, ordered by timestamp descending
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TelemetryPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /healthz:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags: [ops]
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+components:
+  schemas:
+    GPU:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          description: GPU UUID identifier
+          example: "GPU-5fd4f087-86f3-7a43-b711-4771313afc50"
+
+    TelemetryEntry:
+      type: object
+      required: [timestamp, metric_name, value]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: System processing time when the telemetry was ingested
+          example: "2025-07-18T20:42:34Z"
+        metric_name:
+          type: string
+          description: DCGM metric name
+          example: "DCGM_FI_DEV_GPU_UTIL"
+        value:
+          type: number
+          format: double
+          description: Metric value
+          example: 87.5
+        hostname:
+          type: string
+          description: Host on which the GPU resides
+          example: "mtv5-dgx1-hgpu-031"
+        labels_raw:
+          type: string
+          description: Raw label string from the DCGM exporter
+          example: 'DCGM_FI_DRIVER_VERSION="535.129.03",Hostname="mtv5-dgx1-hgpu-031"'
+
+    TelemetryPage:
+      type: object
+      required: [gpu_id, page, size, entries]
+      properties:
+        gpu_id:
+          type: string
+          example: "GPU-5fd4f087-86f3-7a43-b711-4771313afc50"
+        page:
+          type: integer
+          example: 1
+        size:
+          type: integer
+          description: Number of entries in this page
+          example: 100
+        total:
+          type: integer
+          description: Total matching entries (may be omitted if count is expensive)
+          example: 4320
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/TelemetryEntry"
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+          example: "GPU not found"
+
+  responses:
+    BadRequest:
+      description: Invalid query parameters
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: The requested GPU was not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

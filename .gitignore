@@ -20,6 +20,13 @@ Thumbs.db
 
 # Test Coverage
 coverage/
+coverage.*
+
+# WAL / Snapshot data
+wal/
+
+# Swag generated output (local)
+docs/
 
 # Kubernetes
 *.secret.yaml
