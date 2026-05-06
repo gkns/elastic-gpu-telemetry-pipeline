@@ -1,7 +1,9 @@
-BINDIR := bin
-CMDS    := mq streamer collector api-gateway
+BINDIR   := bin
+CMDS     := mq streamer collector api-gateway
+REGISTRY ?= elastic-gpu-telemetry
+TAG      ?= latest
 
-.PHONY: build test test-load swagger docker-build lint clean
+.PHONY: build test test-load swagger docker-build docker-push lint clean
 
 build:
 	@mkdir -p $(BINDIR)
@@ -20,10 +22,16 @@ swagger:
 	$(shell go env GOPATH)/bin/swag init -g cmd/api-gateway/main.go -o cmd/api-gateway/docs/
 
 docker-build:
-	docker build -f deploy/docker/mq.Dockerfile -t elastic-gpu-telemetry/mq:latest .
-	docker build -f deploy/docker/streamer.Dockerfile -t elastic-gpu-telemetry/streamer:latest .
-	docker build -f deploy/docker/collector.Dockerfile -t elastic-gpu-telemetry/collector:latest .
-	docker build -f deploy/docker/api-gateway.Dockerfile -t elastic-gpu-telemetry/api-gateway:latest .
+	@for cmd in $(CMDS); do \
+		echo "Building $$cmd..."; \
+		docker build -f deploy/docker/$$cmd.Dockerfile -t $(REGISTRY)/$$cmd:$(TAG) .; \
+	done
+
+docker-push: docker-build
+	@for cmd in $(CMDS); do \
+		echo "Pushing $(REGISTRY)/$$cmd:$(TAG)..."; \
+		docker push $(REGISTRY)/$$cmd:$(TAG); \
+	done
 
 lint:
 	golangci-lint run ./...
