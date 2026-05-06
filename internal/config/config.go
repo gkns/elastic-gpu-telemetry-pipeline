@@ -76,7 +76,7 @@ func LoadCollectorConfig() CollectorConfig {
 
 func LoadAPIGatewayConfig() APIGatewayConfig {
 	return APIGatewayConfig{
-		ListenAddr:    getEnv("GATEWAY_LISTEN_ADDR", ":8080"),
+		ListenAddr:    getEnv("GATEWAY_LISTEN_ADDR", ":8081"),
 		QuestDBPGAddr: getEnv("GATEWAY_QUESTDB_PG_ADDR", "localhost:8812"),
 		PageSizeMax:   getInt("GATEWAY_PAGE_SIZE_MAX", 1000),
 	}
