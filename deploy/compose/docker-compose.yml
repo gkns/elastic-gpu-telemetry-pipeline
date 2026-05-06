@@ -7,6 +7,12 @@ services:
       - "9000:9000"   # QuestDB Web Console
     volumes:
       - questdb-data:/root/.questdb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   mq:
     build:
@@ -21,6 +27,13 @@ services:
       MQ_BUFFER_CAP: "1000"
     ports:
       - "7000:7000"
+    healthcheck:
+      # nc is available in busybox/alpine; exits 0 when TCP port is open
+      test: ["CMD-SHELL", "nc -z localhost 7000"]
+      interval: 5s
+      timeout: 3s
+      retries: 6
+      start_period: 5s
     # Scale with: docker compose up --scale collector=3 --scale streamer=2
 
   streamer:
@@ -34,7 +47,8 @@ services:
     volumes:
       - ../../data:/data:ro
     depends_on:
-      - mq
+      mq:
+        condition: service_healthy
 
   collector:
     build:
@@ -46,8 +60,10 @@ services:
       COLLECTOR_QUESTDB_PG_ADDR: "questdb:8812"
       COLLECTOR_WORKERS: "4"
     depends_on:
-      - mq
-      - questdb
+      mq:
+        condition: service_healthy
+      questdb:
+        condition: service_healthy
     deploy:
       replicas: 1
 
@@ -61,7 +77,8 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      - questdb
+      questdb:
+        condition: service_healthy
 
 volumes:
   questdb-data:
