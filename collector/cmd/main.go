@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	mqAddr := flag.String("mq", "localhost:8080", "MQ server address")
+	mqAddr := flag.String("mq", "localhost:9090", "MQ server address")
 	dbConn := flag.String("db", "postgres://admin:quest@localhost:8812/qdb", "QuestDB connection string")
 	flag.Parse()
 

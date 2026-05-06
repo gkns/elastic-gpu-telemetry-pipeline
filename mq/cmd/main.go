@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	addr := flag.String("addr", ":8080", "Listen address")
+	addr := flag.String("addr", ":9090", "Listen address")
 	snapshotPath := flag.String("snapshot", "mq_state.bin", "Path to snapshot file")
 	flag.Parse()
 

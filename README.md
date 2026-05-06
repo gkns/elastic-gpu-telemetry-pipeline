@@ -22,40 +22,33 @@ An elastic, scalable, and stable telemetry pipeline for AI Clusters with a custo
 ### Local Development (Docker Compose)
 
 1. Start QuestDB:
-   ```bash
-   docker-compose -f deploy/questdb/docker-compose.yml up -d
+   ```docker-compose -f deploy/questdb/docker-compose.yml up -d
    ```
 
 2. Run MQ:
-   ```bash
-   go run mq/cmd/main.go
+   ```go run mq/cmd/main.go
    ```
 
 3. Run Collector:
-   ```bash
-   go run collector/cmd/main.go
+   ```go run collector/cmd/main.go
    ```
 
 4. Run Streamer:
-   ```bash
-   go run streamer/cmd/main.go --input data/metrics.csv
+   ```go run streamer/cmd/main.go --input data/metrics.csv
    ```
 
 5. Run API Gateway:
-   ```bash
-   go run api-gateway/cmd/main.go
+   ```go run api-gateway/cmd/main.go
    ```
 
 ### Kubernetes Deployment (KIND)
 
 1. Setup Cluster:
-   ```bash
-   make kind-setup
+   ```make kind-setup
    ```
 
 2. Build and Deploy:
-   ```bash
-   make build && make docker-build && make deploy
+   ```make build && make docker-build && make deploy
    ```
 
 ## API Documentation

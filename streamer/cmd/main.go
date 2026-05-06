@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	mqAddr := flag.String("mq", "localhost:8080", "MQ server address")
+	mqAddr := flag.String("mq", "localhost:9090", "MQ server address")
 	csvPath := flag.String("input", "", "Path to CSV file")
 	interval := flag.Duration("interval", time.Second, "Streaming interval")
 	flag.Parse()

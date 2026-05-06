@@ -10,7 +10,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	httpSwagger "github.com/swaggo/http-swagger"
-	_ "github.com/gkns/elastic-gpu-telemetry-pipeline/api-gateway/docs"
 )
 
 // @title Elastic GPU Telemetry API
