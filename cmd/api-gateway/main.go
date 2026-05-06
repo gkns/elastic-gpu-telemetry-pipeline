@@ -12,7 +12,7 @@ import (
 
 	"github.com/gkns/elastic-gpu-telemetry-pipeline/internal/config"
 	"github.com/gkns/elastic-gpu-telemetry-pipeline/internal/questdb"
-	_ "github.com/gkns/elastic-gpu-telemetry-pipeline/specs/001-elastic-gpu-telemetry-pipeline/contracts"
+	_ "github.com/gkns/elastic-gpu-telemetry-pipeline/cmd/api-gateway/docs"
 )
 
 func main() {

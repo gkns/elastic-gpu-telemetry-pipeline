@@ -17,7 +17,7 @@ test-load:
 	go test -tags loadtest -timeout 120s -run TestLoad ./internal/mq/
 
 swagger:
-	$(shell go env GOPATH)/bin/swag init -g cmd/api-gateway/main.go -o specs/001-elastic-gpu-telemetry-pipeline/contracts/
+	$(shell go env GOPATH)/bin/swag init -g cmd/api-gateway/main.go -o cmd/api-gateway/docs/
 
 docker-build:
 	docker build -f deploy/docker/mq.Dockerfile -t elastic-gpu-telemetry/mq:latest .
