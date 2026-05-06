@@ -1,0 +1,123 @@
+definitions:
+  main.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  main.GPU:
+    properties:
+      id:
+        type: string
+    type: object
+  main.TelemetryEntry:
+    properties:
+      hostname:
+        type: string
+      labels_raw:
+        type: string
+      metric_name:
+        type: string
+      timestamp:
+        type: string
+      value:
+        type: number
+    type: object
+  main.TelemetryPage:
+    properties:
+      entries:
+        items:
+          $ref: '#/definitions/main.TelemetryEntry'
+        type: array
+      gpu_id:
+        type: string
+      page:
+        type: integer
+      size:
+        type: integer
+      total:
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/gpus:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/main.GPU'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      summary: List all GPUs with available telemetry data
+      tags:
+      - telemetry
+  /api/v1/gpus/{id}/telemetry:
+    get:
+      parameters:
+      - description: GPU UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: ISO 8601 start time
+        in: query
+        name: start_time
+        type: string
+      - description: ISO 8601 end time
+        in: query
+        name: end_time
+        type: string
+      - default: 1
+        description: Page number (1-indexed)
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: Entries per page (max 1000)
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.TelemetryPage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      summary: Get paginated telemetry entries for a specific GPU
+      tags:
+      - telemetry
+  /healthz:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - ops
+swagger: "2.0"

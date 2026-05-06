@@ -1,0 +1,147 @@
+# Default values for elastic-gpu-telemetry.
+
+# -- Global image pull policy applied to all components unless overridden.
+imagePullPolicy: IfNotPresent
+
+# -- Optional image pull secrets (e.g. for a private registry).
+imagePullSecrets: []
+
+# -- Labels added to every resource created by this chart.
+commonLabels: {}
+
+# ─────────────────────────────────────────────
+# QuestDB — time-series storage
+# ─────────────────────────────────────────────
+questdb:
+  image: questdb/questdb:latest
+  # -- Size of the PersistentVolumeClaim for QuestDB data.
+  storageSize: 10Gi
+  # -- StorageClass for the QuestDB PVC. Empty string uses the cluster default.
+  storageClassName: ""
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+  # -- Extra environment variables forwarded to QuestDB.
+  extraEnv: []
+
+# ─────────────────────────────────────────────
+# MQ — custom TCP message queue
+# ─────────────────────────────────────────────
+mq:
+  image: elastic-gpu-telemetry/mq:latest
+  replicas: 1
+  config:
+    listenAddr: ":7000"
+    walDir: "/data/wal"
+    snapshotInterval: "30s"
+    inflightTimeout: "5s"
+    maxRetries: "3"
+    bufferCap: "1000"
+  # -- Size of the PVC used to persist WAL files across restarts.
+  walStorageSize: 1Gi
+  walStorageClassName: ""
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+# ─────────────────────────────────────────────
+# Streamer — reads CSV and publishes to MQ
+# ─────────────────────────────────────────────
+streamer:
+  image: elastic-gpu-telemetry/streamer:latest
+  replicas: 1
+  config:
+    mqAddr: "mq:7000"
+    # -- Path inside the container where the CSV file is mounted.
+    csvPath: "/data/input_dcgm_metrics_20250718_134233.csv"
+    # -- Rate-limit between publishes. "0" means as fast as possible.
+    sendRate: "0"
+  # -- CSV data source. Exactly one of `pvc` or `existingClaim` must be set.
+  csv:
+    # -- Name of an existing PVC that already contains the CSV file.
+    # Leave empty to create a new PVC (you must populate it manually or via a Job).
+    existingClaim: ""
+    # -- Settings used when existingClaim is empty and a new PVC is created.
+    storageSize: 2Gi
+    storageClassName: ""
+    # -- Mount path inside the streamer container.
+    mountPath: "/data"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+
+# ─────────────────────────────────────────────
+# Collector — receives from MQ and writes to QuestDB via ILP
+# ─────────────────────────────────────────────
+collector:
+  image: elastic-gpu-telemetry/collector:latest
+  # -- Number of Collector replicas. MQ uses sticky FNV-1a routing so
+  # increasing replicas distributes different streamers across collectors.
+  replicas: 2
+  config:
+    mqAddr: "mq:7000"
+    questdbILPAddr: "questdb:9009"
+    questdbPGAddr: "questdb:8812"
+    workers: "4"
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+# ─────────────────────────────────────────────
+# API Gateway — REST interface over QuestDB
+# ─────────────────────────────────────────────
+apiGateway:
+  image: elastic-gpu-telemetry/api-gateway:latest
+  replicas: 1
+  config:
+    questdbPGAddr: "questdb:8812"
+    listenAddr: ":8080"
+    pageSizeMax: "1000"
+  service:
+    # -- ClusterIP, NodePort, or LoadBalancer.
+    type: ClusterIP
+    port: 8080
+    # -- Only used when type is NodePort.
+    nodePort: 30080
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+
+# ─────────────────────────────────────────────
+# Ingress — optional ingress for the API Gateway
+# ─────────────────────────────────────────────
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: gpu-telemetry.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: gpu-telemetry-tls
+  #    hosts:
+  #      - gpu-telemetry.local

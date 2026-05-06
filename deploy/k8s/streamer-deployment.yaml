@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streamer
+  template:
+    metadata:
+      labels:
+        app: streamer
+    spec:
+      containers:
+        - name: streamer
+          image: elastic-gpu-telemetry/streamer:latest
+          imagePullPolicy: Never
+          env:
+            - name: STREAMER_MQ_ADDR
+              value: "mq:7000"
+            - name: STREAMER_CSV_PATH
+              value: "/data/input_dcgm_metrics_20250718_134233.csv"
+          volumeMounts:
+            - name: csv-data
+              mountPath: /data
+      volumes:
+        - name: csv-data
+          configMap:
+            name: csv-data

@@ -1,0 +1,43 @@
+Elastic GPU Telemetry Pipeline — {{ .Chart.Version }} — installed as {{ .Release.Name }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 1: Load your CSV data into the Streamer PVC
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Wait for the Streamer pod to be scheduled, then copy your CSV:
+
+  STREAMER_POD=$(kubectl get pod -l app.kubernetes.io/component=streamer \
+    -l app.kubernetes.io/instance={{ .Release.Name }} \
+    -o jsonpath='{.items[0].metadata.name}')
+
+  kubectl cp data/input_dcgm_metrics_20250718_134233.csv \
+    ${STREAMER_POD}:/data/input_dcgm_metrics_20250718_134233.csv
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 2: Access the API Gateway
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{{- if eq .Values.apiGateway.service.type "NodePort" }}
+  export NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+  curl http://${NODE_IP}:{{ .Values.apiGateway.service.nodePort }}/api/v1/gpus
+{{- else if eq .Values.apiGateway.service.type "LoadBalancer" }}
+  export LB_IP=$(kubectl get svc {{ include "elastic-gpu-telemetry.fullname" . }}-api-gateway \
+    -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  curl http://${LB_IP}:{{ .Values.apiGateway.service.port }}/api/v1/gpus
+{{- else }}
+  kubectl port-forward svc/{{ include "elastic-gpu-telemetry.fullname" . }}-api-gateway 8080:{{ .Values.apiGateway.service.port }}
+  curl http://localhost:8080/api/v1/gpus
+{{- end }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Scale Collectors or Streamers
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  helm upgrade {{ .Release.Name }} . --set collector.replicas=4
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  QuestDB Web Console
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  kubectl port-forward svc/{{ include "elastic-gpu-telemetry.fullname" . }}-questdb 9000:9000
+  open http://localhost:9000

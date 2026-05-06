@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "elastic-gpu-telemetry.fullname" . }}-questdb
+  labels:
+    {{- include "elastic-gpu-telemetry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: questdb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.questdb.storageSize }}
+  {{- with .Values.questdb.storageClassName }}
+  storageClassName: {{ . }}
+  {{- end }}

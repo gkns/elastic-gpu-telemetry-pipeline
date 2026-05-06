@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: questdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: questdb
+  template:
+    metadata:
+      labels:
+        app: questdb
+    spec:
+      containers:
+        - name: questdb
+          image: questdb/questdb:latest
+          ports:
+            - containerPort: 8812
+            - containerPort: 9009
+            - containerPort: 9000
+          volumeMounts:
+            - name: questdb-data
+              mountPath: /root/.questdb
+      volumes:
+        - name: questdb-data
+          persistentVolumeClaim:
+            claimName: questdb-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: questdb-pvc
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: questdb
+spec:
+  selector:
+    app: questdb
+  ports:
+    - name: pg
+      port: 8812
+      targetPort: 8812
+    - name: ilp
+      port: 9009
+      targetPort: 9009

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "elastic-gpu-telemetry.fullname" . }}-api-gateway
+  labels:
+    {{- include "elastic-gpu-telemetry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api-gateway
+spec:
+  type: {{ .Values.apiGateway.service.type }}
+  selector:
+    {{- include "elastic-gpu-telemetry.selectorLabels" (dict "component" "api-gateway" "context" .) | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.apiGateway.service.port }}
+      targetPort: http
+      {{- if and (eq .Values.apiGateway.service.type "NodePort") .Values.apiGateway.service.nodePort }}
+      nodePort: {{ .Values.apiGateway.service.nodePort }}
+      {{- end }}

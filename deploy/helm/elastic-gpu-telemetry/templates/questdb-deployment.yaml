@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "elastic-gpu-telemetry.fullname" . }}-questdb
+  labels:
+    {{- include "elastic-gpu-telemetry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: questdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "elastic-gpu-telemetry.selectorLabels" (dict "component" "questdb" "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "elastic-gpu-telemetry.selectorLabels" (dict "component" "questdb" "context" .) | nindent 8 }}
+    spec:
+      {{- include "elastic-gpu-telemetry.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: questdb
+          image: {{ .Values.questdb.image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - name: pg
+              containerPort: 8812
+              protocol: TCP
+            - name: ilp
+              containerPort: 9009
+              protocol: TCP
+            - name: http
+              containerPort: 9000
+              protocol: TCP
+          {{- with .Values.questdb.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /root/.questdb
+          resources:
+            {{- toYaml .Values.questdb.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "elastic-gpu-telemetry.fullname" . }}-questdb

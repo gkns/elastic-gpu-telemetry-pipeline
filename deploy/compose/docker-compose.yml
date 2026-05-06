@@ -1,0 +1,67 @@
+services:
+  questdb:
+    image: questdb/questdb:latest
+    ports:
+      - "8812:8812"   # PostgreSQL wire (API Gateway queries)
+      - "9009:9009"   # ILP (Collector writes)
+      - "9000:9000"   # QuestDB Web Console
+    volumes:
+      - questdb-data:/root/.questdb
+
+  mq:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/mq.Dockerfile
+    environment:
+      MQ_LISTEN_ADDR: ":7000"
+      MQ_WAL_DIR: "./wal"
+      MQ_SNAPSHOT_INTERVAL: "30s"
+      MQ_INFLIGHT_TIMEOUT: "5s"
+      MQ_MAX_RETRIES: "3"
+      MQ_BUFFER_CAP: "1000"
+    ports:
+      - "7000:7000"
+    # Scale with: docker compose up --scale collector=3 --scale streamer=2
+
+  streamer:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/streamer.Dockerfile
+    environment:
+      STREAMER_MQ_ADDR: "mq:7000"
+      STREAMER_CSV_PATH: "/data/input_dcgm_metrics_20250718_134233.csv"
+      STREAMER_SEND_RATE: "0"
+    volumes:
+      - ../../data:/data:ro
+    depends_on:
+      - mq
+
+  collector:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/collector.Dockerfile
+    environment:
+      COLLECTOR_MQ_ADDR: "mq:7000"
+      COLLECTOR_QUESTDB_ILP_ADDR: "questdb:9009"
+      COLLECTOR_QUESTDB_PG_ADDR: "questdb:8812"
+      COLLECTOR_WORKERS: "4"
+    depends_on:
+      - mq
+      - questdb
+    deploy:
+      replicas: 1
+
+  api-gateway:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/api-gateway.Dockerfile
+    environment:
+      GATEWAY_QUESTDB_PG_ADDR: "questdb:8812"
+      GATEWAY_LISTEN_ADDR: ":8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - questdb
+
+volumes:
+  questdb-data:

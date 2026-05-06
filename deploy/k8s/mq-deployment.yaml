@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mq
+  template:
+    metadata:
+      labels:
+        app: mq
+    spec:
+      containers:
+        - name: mq
+          image: elastic-gpu-telemetry/mq:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 7000
+          env:
+            - name: MQ_LISTEN_ADDR
+              value: ":7000"
+            - name: MQ_WAL_DIR
+              value: "/data/wal"
+          volumeMounts:
+            - name: wal-data
+              mountPath: /data/wal
+      volumes:
+        - name: wal-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mq
+spec:
+  selector:
+    app: mq
+  ports:
+    - port: 7000
+      targetPort: 7000
