@@ -14,7 +14,7 @@
 ## Telemetry Streamer
 - Streams data continuously from CSV.
 - Injects processing time as timestamp.
-- Ensure unit tests are written
+- Ensure unit tests are written and are runnable using go test
 
 ## Telemetry Collector
 - Consumes messages from the Custom Message Queue.
