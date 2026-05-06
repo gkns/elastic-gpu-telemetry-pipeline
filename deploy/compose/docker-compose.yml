@@ -8,10 +8,12 @@ services:
     volumes:
       - questdb-data:/root/.questdb
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000"]
+      # bash built-in TCP redirect — no curl/wget needed in the JRE image.
+      # Port 9000 (HTTP console) opens only after QuestDB is fully initialised.
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/9000' 2>/dev/null"]
       interval: 5s
       timeout: 5s
-      retries: 12
+      retries: 15
       start_period: 30s
 
   mq:
