@@ -96,13 +96,13 @@ As an API gateway, I want to be able to serve the telemetry data to the user / o
 2. **Given** mocked data in unit tests, the gateway should should be able to serve the following APIs at the minimum:
 
 - [ ] `GET /api/v1/gpus` which returns a list of all GPUs for which telemetry data is available.
-- [ ] `GET / api/v1/gpus/{id}/telemetry` which return a paginated telemetry entries for a specific GPU, ordered by time
-- [ ] `GET / api/v1/gpus/{id}/telemetry?start_time=...&end_time=...` which returns a paginated telemetry entries for a specific GPU, within the specific time range and ordered by time.
+- [ ] `GET /api/v1/gpus/{id}/telemetry` which return a paginated telemetry entries for a specific GPU, ordered by time
+- [ ] `GET /api/v1/gpus/{id}/telemetry?start_time=...&end_time=...` which returns a paginated telemetry entries for a specific GPU, within the specific time range and ordered by time.
 
 ---
 
 
-### User Story 6 - Horizontal Scaling & Load Balancing (Priority: P2)x	
+### User Story 6 - Horizontal Scaling & Load Balancing (Priority: P2)
 
 As a system operator, I want the custom messaging queue to distribute messages among multiple collectors so that the system can handle high telemetry volumes.
 
@@ -143,7 +143,7 @@ As a system operator, I want the MQ to handle up to 10 instances of streamers an
 - **FR-001**: System MUST implement a custom binary communication protocol over TCP (not using third-party MQ libraries).
 - **FR-002**: System MUST support concurrent connections from multiple Telemetry Streamers (producers).
 - **FR-003**: System MUST support concurrent connections from multiple Telemetry Collectors (consumers).
-- **FR-004**: System MUST implement a load distribution strategy (e.g., Round-robin) to balance messages across active collectors.
+- **FR-004**: System MUST implement a load distribution strategy (sticky-hash routing by streamer ID, e.g., FNV-1a mod N collectors) to balance messages across active collectors while preserving per-streamer ordering (FR-009).
 - **FR-005**: System MUST implement an acknowledgment mechanism (ACK/NACK) to ensure at-least-once delivery.
 - **FR-006**: System MUST support scaling up to 10 instances each for streamers and collectors.
 - **FR-007**: System MUST provide a mechanism for service discovery or connection coordination (e.g., MQ address/port).
