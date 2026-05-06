@@ -17,7 +17,7 @@ spec:
           image: elastic-gpu-telemetry/api-gateway:latest
           imagePullPolicy: Never
           ports:
-            - containerPort: 8080
+            - containerPort: 8081
           env:
             - name: GATEWAY_QUESTDB_PG_ADDR
               value: "questdb:8812"
@@ -31,6 +31,6 @@ spec:
   selector:
     app: api-gateway
   ports:
-    - port: 8080
-      targetPort: 8080
-      nodePort: 30080
+    - port: 8081
+      targetPort: 8081
+      nodePort: 30081

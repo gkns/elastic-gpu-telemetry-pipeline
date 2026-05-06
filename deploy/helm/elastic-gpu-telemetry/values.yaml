@@ -111,14 +111,14 @@ apiGateway:
   replicas: 1
   config:
     questdbPGAddr: "questdb:8812"
-    listenAddr: ":8080"
+    listenAddr: ":8081"
     pageSizeMax: "1000"
   service:
     # -- ClusterIP, NodePort, or LoadBalancer.
     type: ClusterIP
-    port: 8080
+    port: 8081
     # -- Only used when type is NodePort.
-    nodePort: 30080
+    nodePort: 30081
   resources:
     requests:
       cpu: "50m"

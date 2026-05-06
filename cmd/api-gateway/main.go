@@ -8,9 +8,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 
 	"github.com/gkns/elastic-gpu-telemetry-pipeline/internal/config"
 	"github.com/gkns/elastic-gpu-telemetry-pipeline/internal/questdb"
+	_ "github.com/gkns/elastic-gpu-telemetry-pipeline/specs/001-elastic-gpu-telemetry-pipeline/contracts"
 )
 
 func main() {
@@ -34,6 +36,7 @@ func main() {
 	r.Get("/api/v1/gpus", h.ListGPUs)
 	r.Get("/api/v1/gpus/{id}/telemetry", h.GetGPUTelemetry)
 	r.Get("/healthz", h.HealthCheck)
+	r.Get("/swagger/*", httpSwagger.Handler())
 
 	logger.Info("API Gateway listening", "addr", cfg.ListenAddr)
 	if err := http.ListenAndServe(cfg.ListenAddr, r); err != nil {

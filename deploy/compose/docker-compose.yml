@@ -57,9 +57,9 @@ services:
       dockerfile: deploy/docker/api-gateway.Dockerfile
     environment:
       GATEWAY_QUESTDB_PG_ADDR: "questdb:8812"
-      GATEWAY_LISTEN_ADDR: ":8080"
+      GATEWAY_LISTEN_ADDR: ":8081"
     ports:
-      - "8080:8080"
+      - "8081:8081"
     depends_on:
       - questdb
 

@@ -22,7 +22,7 @@ spec:
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: {{ .Values.apiGateway.service.port }}
               protocol: TCP
           env:
             - name: GATEWAY_QUESTDB_PG_ADDR

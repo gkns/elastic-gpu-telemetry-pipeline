@@ -246,7 +246,7 @@ COLLECTOR_MQ_ADDR=localhost:17000 COLLECTOR_ID=c2 ./bin/collector
 
 ```bash
 ./bin/api-gateway
-# Listens on :8080, connects to QuestDB at localhost:8812
+# Listens on :8081, connects to QuestDB at localhost:8812
 ```
 
 ### 5. Start the Streamer
@@ -263,16 +263,19 @@ The Streamer logs `streamer done rows_sent=2470` when the CSV is exhausted.
 
 ```bash
 # List GPUs
-curl http://localhost:8080/api/v1/gpus
+curl http://localhost:8081/api/v1/gpus
 
 # Paginated telemetry for GPU 0
-curl "http://localhost:8080/api/v1/gpus/0/telemetry?page=1&page_size=20"
+curl "http://localhost:8081/api/v1/gpus/0/telemetry?page=1&page_size=20"
 
 # Time-range query
-curl "http://localhost:8080/api/v1/gpus/0/telemetry?start_time=2025-07-18T20:00:00Z&end_time=2025-07-18T21:00:00Z"
+curl "http://localhost:8081/api/v1/gpus/0/telemetry?start_time=2025-07-18T20:00:00Z&end_time=2025-07-18T21:00:00Z"
 
 # Health check
-curl http://localhost:8080/healthz
+curl http://localhost:8081/healthz
+
+# Swagger UI
+open http://localhost:8081/swagger/index.html
 ```
 
 ### 7. Generate OpenAPI docs
@@ -280,6 +283,7 @@ curl http://localhost:8080/healthz
 ```bash
 make swagger
 # → specs/001-elastic-gpu-telemetry-pipeline/contracts/swagger.json
+# UI auto-served at /swagger/index.html (no restart needed after regen)
 ```
 
 ---
@@ -305,7 +309,8 @@ Services are available at:
 
 | Service | URL |
 |---------|-----|
-| API Gateway | http://localhost:8080 |
+| API Gateway | http://localhost:8081 |
+| Swagger UI | http://localhost:8081/swagger/index.html |
 | QuestDB Web Console | http://localhost:9000 |
 | QuestDB pgwire | localhost:8812 |
 | MQ TCP | localhost:7000 |
@@ -372,11 +377,11 @@ helm install gpu-pipeline deploy/helm/elastic-gpu-telemetry/ \
 # NodePort (KIND)
 export NODE_IP=$(kubectl get nodes \
   -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
-curl http://${NODE_IP}:30080/api/v1/gpus
+curl http://${NODE_IP}:30081/api/v1/gpus
 
 # Or use port-forward
-kubectl port-forward svc/gpu-pipeline-elastic-gpu-telemetry-api-gateway 8080:8080
-curl http://localhost:8080/api/v1/gpus
+kubectl port-forward svc/gpu-pipeline-elastic-gpu-telemetry-api-gateway 8081:8081
+curl http://localhost:8081/api/v1/gpus
 ```
 
 ### Scale collectors
@@ -510,7 +515,7 @@ All configuration is via environment variables. Every component falls back to sa
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `GATEWAY_LISTEN_ADDR` | `:8080` | HTTP listen address |
+| `GATEWAY_LISTEN_ADDR` | `:8081` | HTTP listen address |
 | `GATEWAY_QUESTDB_PG_ADDR` | `localhost:8812` | QuestDB pgwire address |
 | `GATEWAY_PAGE_SIZE_MAX` | `1000` | Maximum page_size accepted by the API |
 
