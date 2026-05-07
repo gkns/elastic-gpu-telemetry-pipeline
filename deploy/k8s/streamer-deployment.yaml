@@ -12,6 +12,10 @@ spec:
       labels:
         app: streamer
     spec:
+      initContainers:
+        - name: wait-for-mq
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z mq 7000; do echo "waiting for mq"; sleep 2; done']
       containers:
         - name: streamer
           image: elastic-gpu-telemetry/streamer:latest
@@ -21,10 +25,16 @@ spec:
               value: "mq:7000"
             - name: STREAMER_CSV_PATH
               value: "/data/input_dcgm_metrics_20250718_134233.csv"
-          volumeMounts:
-            - name: csv-data
-              mountPath: /data
-      volumes:
-        - name: csv-data
-          configMap:
-            name: csv-data
+            - name: STREAMER_SEND_RATE
+              value: "0"
+            - name: STREAMER_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"

@@ -345,6 +345,8 @@ make docker-push REGISTRY=myorg TAG=v1.0.0
 
 # GitHub Container Registry
 make docker-push REGISTRY=ghcr.io/myorg TAG=v1.0.0
+# The command I use: 
+make docker-push REGISTRY=ghcr.io/gkns TAG=v1.0.0
 
 # AWS ECR
 make docker-push REGISTRY=123456789.dkr.ecr.us-east-1.amazonaws.com/gpu-telemetry TAG=v1.0.0
@@ -353,12 +355,12 @@ make docker-push REGISTRY=123456789.dkr.ecr.us-east-1.amazonaws.com/gpu-telemetr
 Then install the chart referencing the pushed images:
 
 ```bash
-helm install gpu-pipeline deploy/helm/elastic-gpu-telemetry/ \
+helm install elastic-gpu-telemetry deploy/helm/elastic-gpu-telemetry/ \
   --set imagePullPolicy=Always \
-  --set mq.image=myorg/mq:v1.0.0 \
-  --set streamer.image=myorg/streamer:v1.0.0 \
-  --set collector.image=myorg/collector:v1.0.0 \
-  --set apiGateway.image=myorg/api-gateway:v1.0.0
+  --set mq.image=gkns/mq:v1.0.0 \
+  --set streamer.image=gkns/streamer:v1.0.0 \
+  --set collector.image=gkns/collector:v1.0.0 \
+  --set apiGateway.image=gkns/api-gateway:v1.0.0
 ```
 
 Or set a private registry pull secret:

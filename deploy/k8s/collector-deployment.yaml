@@ -12,6 +12,13 @@ spec:
       labels:
         app: collector
     spec:
+      initContainers:
+        - name: wait-for-mq
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z mq 7000; do echo "waiting for mq"; sleep 2; done']
+        - name: wait-for-questdb
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z questdb 9000; do echo "waiting for questdb"; sleep 2; done']
       containers:
         - name: collector
           image: elastic-gpu-telemetry/collector:latest
@@ -23,3 +30,16 @@ spec:
               value: "questdb:9009"
             - name: COLLECTOR_QUESTDB_PG_ADDR
               value: "questdb:8812"
+            - name: COLLECTOR_WORKERS
+              value: "4"
+            - name: COLLECTOR_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

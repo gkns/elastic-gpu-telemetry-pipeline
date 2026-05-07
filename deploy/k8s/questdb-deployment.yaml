@@ -16,9 +16,34 @@ spec:
         - name: questdb
           image: questdb/questdb:latest
           ports:
-            - containerPort: 8812
-            - containerPort: 9009
-            - containerPort: 9000
+            - name: pg
+              containerPort: 8812
+              protocol: TCP
+            - name: ilp
+              containerPort: 9009
+              protocol: TCP
+            - name: http
+              containerPort: 9000
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+          readinessProbe:
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 3
           volumeMounts:
             - name: questdb-data
               mountPath: /root/.questdb
@@ -51,3 +76,6 @@ spec:
     - name: ilp
       port: 9009
       targetPort: 9009
+    - name: http
+      port: 9000
+      targetPort: 9000
