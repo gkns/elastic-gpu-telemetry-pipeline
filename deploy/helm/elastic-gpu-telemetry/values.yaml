@@ -4,7 +4,8 @@
 imagePullPolicy: IfNotPresent
 
 # -- Optional image pull secrets (e.g. for a private registry).
-imagePullSecrets: []
+imagePullSecrets:
+  - name: gkns-ghcr-secret
 
 # -- Labels added to every resource created by this chart.
 commonLabels: {}

@@ -377,6 +377,14 @@ helm install elastic-gpu-telemetry deploy/helm/elastic-gpu-telemetry/ \
 kind create cluster --name gpu-telemetry --config deploy/k8s/kind-config.yaml
 ```
 
+> **macOS / KIND note:** KIND nodes are Docker containers whose internal IPs
+> (e.g. `172.18.0.x`) are not reachable from the host. `kind-config.yaml`
+> adds an `extraPortMappings` entry that forwards host port **30081** →
+> NodePort **30081** on the control-plane node, making the API Gateway
+> reachable at `http://localhost:30081` without port-forward.
+> If you have an existing cluster without this mapping, recreate it or use
+> `kubectl port-forward` instead.
+
 ### Install the chart
 
 ```bash
@@ -390,14 +398,14 @@ The CSV data is bundled inside the Streamer image — the Streamer pod starts re
 ### Access the API Gateway
 
 ```bash
-# NodePort (KIND)
-export NODE_IP=$(kubectl get nodes \
-  -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
-curl http://${NODE_IP}:30081/api/v1/gpus
+# NodePort — works when cluster was created with kind-config.yaml (extraPortMappings)
+curl http://localhost:30081/api/v1/gpus
+open http://localhost:30081/swagger/index.html
 
-# Or use port-forward
+# port-forward — always works, including on existing clusters without extraPortMappings
 kubectl port-forward svc/elastic-gpu-telemetry-api-gateway 8081:8081
 curl http://localhost:8081/api/v1/gpus
+open http://localhost:8081/swagger/index.html
 ```
 
 ### Scale collectors
@@ -410,6 +418,8 @@ helm upgrade elastic-gpu-telemetry deploy/helm/elastic-gpu-telemetry/ \
 Because of sticky FNV-1a routing, increasing collector replicas distributes different streamer IDs across additional pods. Un-ACKed in-flight messages from the previous collector set are redelivered automatically.
 
 ### Access the QuestDB Web Console
+
+QuestDB uses a ClusterIP service, so port-forward is always required:
 
 ```bash
 kubectl port-forward svc/elastic-gpu-telemetry-questdb 9000:9000
