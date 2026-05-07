@@ -282,7 +282,7 @@ open http://localhost:8081/swagger/index.html
 
 ```bash
 make swagger
-# → specs/001-elastic-gpu-telemetry-pipeline/contracts/swagger.json
+# → cmd/api-gateway/docs/swagger.json  (and docs.go, swagger.yaml)
 # UI auto-served at /swagger/index.html (no restart needed after regen)
 ```
 
@@ -357,16 +357,16 @@ Then install the chart referencing the pushed images:
 ```bash
 helm install elastic-gpu-telemetry deploy/helm/elastic-gpu-telemetry/ \
   --set imagePullPolicy=Always \
-  --set mq.image=gkns/mq:v1.0.0 \
-  --set streamer.image=gkns/streamer:v1.0.0 \
-  --set collector.image=gkns/collector:v1.0.0 \
-  --set apiGateway.image=gkns/api-gateway:v1.0.0
+  --set mq.image=ghcr.io/gkns/mq:v1.0.0 \
+  --set streamer.image=ghcr.io/gkns/streamer:v1.0.0 \
+  --set collector.image=ghcr.io/gkns/collector:v1.0.0 \
+  --set apiGateway.image=ghcr.io/gkns/api-gateway:v1.0.0
 ```
 
 Or set a private registry pull secret:
 
 ```bash
-helm install gpu-pipeline deploy/helm/elastic-gpu-telemetry/ \
+helm install elastic-gpu-telemetry deploy/helm/elastic-gpu-telemetry/ \
   --set imagePullSecrets[0].name=regcred \
   --set imagePullPolicy=Always
 ```
@@ -380,7 +380,7 @@ kind create cluster --name gpu-telemetry --config deploy/k8s/kind-config.yaml
 ### Install the chart
 
 ```bash
-helm install gpu-pipeline deploy/helm/elastic-gpu-telemetry/ \
+helm install elastic-gpu-telemetry deploy/helm/elastic-gpu-telemetry/ \
   --set imagePullPolicy=Never \
   --set apiGateway.service.type=NodePort
 ```
@@ -396,14 +396,14 @@ export NODE_IP=$(kubectl get nodes \
 curl http://${NODE_IP}:30081/api/v1/gpus
 
 # Or use port-forward
-kubectl port-forward svc/gpu-pipeline-elastic-gpu-telemetry-api-gateway 8081:8081
+kubectl port-forward svc/elastic-gpu-telemetry-api-gateway 8081:8081
 curl http://localhost:8081/api/v1/gpus
 ```
 
 ### Scale collectors
 
 ```bash
-helm upgrade gpu-pipeline deploy/helm/elastic-gpu-telemetry/ \
+helm upgrade elastic-gpu-telemetry deploy/helm/elastic-gpu-telemetry/ \
   --set collector.replicas=4
 ```
 
@@ -412,17 +412,17 @@ Because of sticky FNV-1a routing, increasing collector replicas distributes diff
 ### Access the QuestDB Web Console
 
 ```bash
-kubectl port-forward svc/gpu-pipeline-elastic-gpu-telemetry-questdb 9000:9000
+kubectl port-forward svc/elastic-gpu-telemetry-questdb 9000:9000
 open http://localhost:9000
 ```
 
 ### Uninstall
 
 ```bash
-helm uninstall gpu-pipeline
+helm uninstall elastic-gpu-telemetry
 
 # PVCs are retained by default — delete manually if needed
-kubectl delete pvc -l app.kubernetes.io/instance=gpu-pipeline
+kubectl delete pvc -l app.kubernetes.io/instance=elastic-gpu-telemetry
 ```
 
 ### values.yaml overrides reference

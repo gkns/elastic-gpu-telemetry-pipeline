@@ -7,12 +7,15 @@ Expand the name of the chart.
 
 {{/*
 Create a default fully qualified app name.
+If the release name already contains the chart name, use it as-is to avoid
+double-suffixing (e.g. "elastic-gpu-telemetry" stays "elastic-gpu-telemetry",
+not "elastic-gpu-telemetry-elastic-gpu-telemetry").
 */}}
 {{- define "elastic-gpu-telemetry.fullname" -}}
-{{- if .Release.Name }}
-{{- printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
+{{- if contains .Chart.Name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- .Chart.Name | trunc 63 | trimSuffix "-" }}
+{{- printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 {{- end }}
 
