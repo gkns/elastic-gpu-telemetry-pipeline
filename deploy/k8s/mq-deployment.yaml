@@ -5,6 +5,8 @@ metadata:
 spec:
   # Single replica: WAL is local and sticky FNV-1a routing is per-streamer.
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: mq

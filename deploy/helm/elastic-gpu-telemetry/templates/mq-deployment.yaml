@@ -9,6 +9,8 @@ spec:
   # MQ is intentionally single-replica: the WAL is local and sticky routing
   # is per-streamer. Horizontal MQ scaling requires a shared WAL backend.
   replicas: {{ .Values.mq.replicas }}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "elastic-gpu-telemetry.selectorLabels" (dict "component" "mq" "context" .) | nindent 6 }}

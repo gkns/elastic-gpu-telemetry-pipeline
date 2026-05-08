@@ -7,6 +7,8 @@ metadata:
     app.kubernetes.io/component: questdb
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "elastic-gpu-telemetry.selectorLabels" (dict "component" "questdb" "context" .) | nindent 6 }}
